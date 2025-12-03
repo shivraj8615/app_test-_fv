@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "title": "Safety Manual",
+    "icon": "ShieldCheck",
+    "file": "safety_manual.pdf"
+  },
+  {
+    "id": "2",
+    "title": "Operation Guide",
+    "icon": "Settings",
+    "file": "operation_guide.pdf"
+  },
+  {
+    "id": "3",
+    "title": "Maintenance",
+    "icon": "Wrench",
+    "file": "maintenance.pdf"
+  },
+  {
+    "id": "4",
+    "title": "Troubleshooting",
+    "icon": "AlertTriangle",
+    "file": "troubleshooting.pdf"
+  }
+]

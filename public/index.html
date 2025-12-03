@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manuals App Builder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .manual-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .manual-info h3 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.1rem;
+        }
+        .manual-info p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        .status.missing {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .status.uploaded {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .btn-upload {
+            background-color: #2196f3;
+            color: white;
+        }
+        .btn-upload:hover {
+            background-color: #1976d2;
+        }
+        .btn-build {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin-top: 2rem;
+            background-color: #4caf50;
+            color: white;
+            font-size: 1.1rem;
+        }
+        .btn-build:hover {
+            background-color: #388e3c;
+        }
+        .btn-build:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #build-log {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #212121;
+            color: #00e676;
+            font-family: monospace;
+            border-radius: 6px;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>App Configuration Dashboard</h1>
+        
+        <div id="manuals-list">
+            <!-- Manuals will be inserted here -->
+        </div>
+
+        <button id="build-btn" class="btn btn-build" onclick="startBuild()">Build APK</button>
+        
+        <div id="build-log">
+            Waiting for build to start...
+        </div>
+    </div>
+
+    <script>
+        async function loadManuals() {
+            const response = await fetch('/api/manuals');
+            const manuals = await response.json();
+            const list = document.getElementById('manuals-list');
+            list.innerHTML = '';
+
+            let allUploaded = true;
+
+            manuals.forEach(manual => {
+                if (!manual.uploaded) allUploaded = false;
+
+                const div = document.createElement('div');
+                div.className = 'manual-item';
+                div.innerHTML = `
+                    <div class="manual-info">
+                        <h3>${manual.title} 
+                            <span class="status ${manual.uploaded ? 'uploaded' : 'missing'}">
+                                ${manual.uploaded ? 'READY' : 'MISSING'}
+                            </span>
+                        </h3>
+                        <p>File: ${manual.file}</p>
+                    </div>
+                    <div>
+                        <input type="file" id="file-${manual.id}" style="display: none" accept=".pdf" onchange="uploadFile('${manual.id}', '${manual.file}', this)">
+                        <button class="btn btn-upload" onclick="document.getElementById('file-${manual.id}').click()">
+                            ${manual.uploaded ? 'Replace PDF' : 'Upload PDF'}
+                        </button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function uploadFile(id, filename, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            // We rename the file to match the expected filename
+            formData.append('pdf', file, filename);
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (res.ok) {
+                    loadManuals();
+                } else {
+                    alert('Upload failed');
+                }
+            } catch (e) {
+                alert('Error uploading file');
+            }
+        }
+
+        async function startBuild() {
+            const btn = document.getElementById('build-btn');
+            const log = document.getElementById('build-log');
+            
+            if (!confirm('This will start the build process. It may take several minutes. Continue?')) return;
+
+            btn.disabled = true;
+            btn.innerText = 'Building... (Check Terminal)';
+            log.style.display = 'block';
+            log.innerText = 'Build command sent. Please check your terminal for real-time logs.\nOnce finished, the APK will be in: android/app/build/outputs/apk/release/app-release.apk';
+
+            try {
+                await fetch('/api/build', { method: 'POST' });
+            } catch (e) {
+                log.innerText += '\nError starting build.';
+                btn.disabled = false;
+            }
+        }
+
+        loadManuals();
+    </script>
+</body>
+</html>

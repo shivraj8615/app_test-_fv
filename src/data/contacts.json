@@ -1,0 +1,23 @@
+[
+    {
+        "id": "1",
+        "name": "Technical Support",
+        "phone": "+1-555-0101",
+        "email": "support@company.com",
+        "role": "24/7 Support"
+    },
+    {
+        "id": "2",
+        "name": "Sales Department",
+        "phone": "+1-555-0102",
+        "email": "sales@company.com",
+        "role": "Product Inquiries"
+    },
+    {
+        "id": "3",
+        "name": "Emergency Hotline",
+        "phone": "+1-555-9999",
+        "email": "emergency@company.com",
+        "role": "Urgent Issues"
+    }
+]
